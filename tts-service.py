@@ -29,6 +29,10 @@ from usage import Usage
 
 app = Flask(__name__)
 
+festival_voices = {
+    "ona": "voice_upc_ca_ona_hts",
+    "pau": "voice_upc_ca_pau_hts"
+}
 
 def getMD5(text):
     m = hashlib.md5()
@@ -42,6 +46,10 @@ def voice_api():
     text = request.args.get('text')
     token = request.args.get('token')
     file_type = request.args.get('type')
+    voice = request.args.get('voice') or "ona"
+
+    if voice not in ["ona", "pau"]:
+        return ("Bad Request", 400)
 
     if file_type not in ("wav", "x-wav", "mp3", None):
         return ("Bad Request", 400)
@@ -67,8 +75,8 @@ def voice_api():
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         p.wait()
 
-        cmd = '{0} -o {1} {2} -eval cfg.txt'.\
-              format(txt2wave, wave_file.name, encoded_file.name)
+        cmd = '{0} -o {1} {2} -eval "({3})"'.\
+              format(txt2wave, wave_file.name, encoded_file.name, festival_voices[voice])
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         p.wait()
 
